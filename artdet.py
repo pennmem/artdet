@@ -1,10 +1,10 @@
-"""Rejection of artifactual and saturated channels."""
+"""Rejection of artifactual and saturated EEG channels."""
 
 import random
 
 import numpy as np
 import pandas as pd
-from traits.api import HasTraits, Array, CArray, Int, ListStr
+from traits.api import HasTraits, Array, Int, ListStr
 
 # dtype for events recarrays
 _events_dtype = [
@@ -92,6 +92,7 @@ class ArtifactDetector(HasTraits):
         this method.
 
         """
+        # TODO
         return {key: random.choice([True, False]) for key in self.channels}
 
     def _get_artifactual_channels(self):
@@ -108,6 +109,7 @@ class ArtifactDetector(HasTraits):
         this method.
 
         """
+        # TODO
         return {key: random.choice([True, False]) for key in self.channels}
 
     def get_bad_channels(self):
