@@ -1,5 +1,6 @@
 """Rejection of artifactual and saturated EEG channels."""
 
+from collections import namedtuple
 import random
 
 import numpy as np
@@ -16,17 +17,25 @@ _events_dtype = [
     ('hashtag', '|S40'),  # sha1 hash
 ]
 
+# Container for results from artifact detection
+ArtifactDetectionResults = namedtuple("ArtifactDetectionResults", "bad_channels,mask")
+
 
 class ArtifactDetector(HasTraits):
     """Class used to detect artifactual and saturated channels."""
     timeseries = Array(desc='time series data, shape = (n_channels, n_samples)')
     channels = ListStr(desc='channel labels')
+
     stim_events = Array(desc='stimulation events', dtype=_events_dtype)
     sham_events = Array(desc='sham stimulation events', dtype=_events_dtype)
+
     pre_stim_start = Int(-440, desc='pre-stim start time relative to stim')
     pre_stim_stop = Int(-40, desc='pre-stim stop time relative to stim')
     post_stim_start = Int(40, desc='post-stim start time relative to stim')
     post_stim_stop = Int(440, desc='post-stim stop time relative to stim')
+
+    saturation_order = Int(10, desc='derivative order')
+    saturation_threshold = Int(10, desc='number of points where order derivative is equal to zero')
 
     def __init__(self, timeseries, channels, stim_events, sham_events):
         super(ArtifactDetector, self).__init__()
@@ -82,26 +91,23 @@ class ArtifactDetector(HasTraits):
 
         Returns
         -------
-        rejected : dict
-            A dictionary with channel labels as keys and boolean
-            values (True meaning the channel is rejected).
-
-        Notes
-        -----
-        Stimulation channels are not treated any differently by
-        this method.
+        mask : np.ndarray
+            Boolean mask over the channel axis to indicate channels exhibiting
+            saturation.
 
         """
-        # TODO
-        return {key: random.choice([True, False]) for key in self.channels}
+        time_axis = 2
+
+        # FIXME: figure out what is really supposed to be used here
+        deriv = np.diff(self._post_stim_intervals,
+                        n=self.saturation_order,
+                        axis=time_axis)
+        mask = ((deriv == 0).sum(time_axis) > self.saturation_threshold).any(0).squeeze()
+        return mask
 
     def _get_artifactual_channels(self):
-        """Identify channels which display significant post-stim artifact.
-
-        Returns
-        -------
-        rejected : dict
-            See identify_saturated_channels
+        """Identify channels which display significant post-stim artifact. See
+        :meth:`_get_saturated_channels` for return value info.
 
         Notes
         -----
@@ -110,7 +116,7 @@ class ArtifactDetector(HasTraits):
 
         """
         # TODO
-        return {key: random.choice([True, False]) for key in self.channels}
+        return np.array([random.choice([True, False]) for _ in range(len(channels))])
 
     def get_bad_channels(self):
         """Identify all bad channels.
@@ -120,6 +126,8 @@ class ArtifactDetector(HasTraits):
         bad_channels : pd.DataFrame
             DataFrame identifying channels as rejected or not (along with reason
             for rejection)
+        mask : np.ndarray
+            Boolean mask
 
         """
         stim_intervals = self._extract_intervals(False)
@@ -132,14 +140,15 @@ class ArtifactDetector(HasTraits):
 
         saturated = self._get_saturated_channels()
         artifactual = self._get_artifactual_channels()
+        mask = np.logical_or(saturated, artifactual)
 
         rejected = [
-            (channel, saturated[channel], artifactual[channel])
-            for channel in self.channels
+            (channel, saturated[i], artifactual[i])
+            for i, channel in enumerate(self.channels)
         ]
 
         bad_channels = pd.DataFrame(rejected, columns=('channel', 'saturated', 'artifactual'))
-        return bad_channels
+        return ArtifactDetectionResults(bad_channels, mask)
 
 
 if __name__ == "__main__":
@@ -166,4 +175,5 @@ if __name__ == "__main__":
     sham = np.rec.array(sham, dtype=_events_dtype)
 
     detector = ArtifactDetector(ts, channels, stim, sham)
-    print(detector.get_bad_channels())
+    df, mask = detector.get_bad_channels()
+    print(df, mask, sep='\n')
