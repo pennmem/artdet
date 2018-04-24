@@ -4,7 +4,7 @@ import random
 
 import numpy as np
 import pandas as pd
-from traits.api import HasTraits, Array, CArray, ListStr
+from traits.api import HasTraits, Array, CArray, Int, ListStr
 
 # dtype for events recarrays
 _events_dtype = [
@@ -23,13 +23,12 @@ class ArtifactDetector(HasTraits):
     channels = ListStr(desc='channel labels')
     stim_events = Array(desc='stimulation events', dtype=_events_dtype)
     sham_events = Array(desc='sham stimulation events', dtype=_events_dtype)
-    pre_stim_interval = CArray(value=[-440, -40], dtype=np.int, shape=(2,),
-                               desc='pre-stim start and stop times')
-    post_stim_interval = CArray(value=[40, 440], dtype=np.int, shape=(2,),
-                                desc='post-stim start and stop times')
+    pre_stim_start = Int(-440, desc='pre-stim start time relative to stim')
+    pre_stim_stop = Int(-40, desc='pre-stim stop time relative to stim')
+    post_stim_start = Int(40, desc='post-stim start time relative to stim')
+    post_stim_stop = Int(440, desc='post-stim stop time relative to stim')
 
-    def __init__(self, timeseries, channels, stim_events, sham_events,
-                 pre_stim_interval=None, post_stim_interval=None):
+    def __init__(self, timeseries, channels, stim_events, sham_events):
         super(ArtifactDetector, self).__init__()
 
         self.timeseries = timeseries
@@ -37,11 +36,12 @@ class ArtifactDetector(HasTraits):
         self.stim_events = stim_events
         self.sham_events = sham_events
 
-        if pre_stim_interval is not None:
-            self.pre_stim_interval = pre_stim_interval
-
-        if post_stim_interval is not None:
-            self.post_stim_interval = post_stim_interval
+        # defer to when we get bad channels because we may wish to tweak start
+        # and stop times
+        self._pre_stim_intervals = None  # type: np.ndarray
+        self._post_stim_intervals = None  # type: np.ndarray
+        self._pre_sham_intervals = None  # type: np.ndarray
+        self._post_sham_intervals = None  # type: np.ndarray
 
     def _extract_intervals(self, sham=False):
         """Extract pre- and post-stim/sham intervals.
@@ -55,10 +55,27 @@ class ArtifactDetector(HasTraits):
         -------
         dict
             A dict containing pre and post intervals which are arrays with
-            dimensions (n_events, n_channels, n_samples_in_interval)
+            dimensions (n_events, n_channels, n_samples_per_event)
 
         """
         events = self.sham_events if sham else self.stim_events
+
+        diff = lambda a, b: max(a, b) - min(a, b)
+
+        pre_length = diff(self.pre_stim_start, self.pre_stim_stop)
+        post_length = diff(self.post_stim_start, self.post_stim_stop)
+
+        pre = np.zeros((len(events), len(self.channels), pre_length))
+        post = np.zeros((len(events), len(self.channels), post_length))
+
+        for i, onset in enumerate(events.onset):
+            pre[i, :] = self.timeseries[:, (onset + self.pre_stim_start):(onset + self.pre_stim_stop)]
+            post[i, :] = self.timeseries[:, (onset + self.post_stim_start):(onset + self.post_stim_stop)]
+
+        return {
+            'pre': pre,
+            'post': post,
+        }
 
     def _get_saturated_channels(self):
         """Identify channels which display post-stim saturation.
@@ -103,6 +120,14 @@ class ArtifactDetector(HasTraits):
             for rejection)
 
         """
+        stim_intervals = self._extract_intervals(False)
+        self._pre_stim_intervals = stim_intervals['pre']
+        self._post_stim_intervals = stim_intervals['post']
+
+        sham_intervals = self._extract_intervals(True)
+        self._pre_sham_intervals = sham_intervals['pre']
+        self._post_sham_intervals = sham_intervals['post']
+
         saturated = self._get_saturated_channels()
         artifactual = self._get_artifactual_channels()
 
@@ -122,7 +147,7 @@ if __name__ == "__main__":
         return sha1(str(x).encode())
 
     channels = ['LA1', 'LA2', 'LAD1', 'LAD2']
-    samples = 10000
+    samples = 100000
     ts = np.random.random((len(channels), samples))
 
     freq = int(200 * 1e3)
