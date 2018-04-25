@@ -86,7 +86,7 @@ class ArtifactDetector(HasTraits):
             'post': post,
         }
 
-    def _get_saturated_channels(self):
+    def get_saturated_channels(self):
         """Identify channels which display post-stim saturation.
 
         Returns
@@ -105,7 +105,7 @@ class ArtifactDetector(HasTraits):
         mask = ((deriv == 0).sum(time_axis) > self.saturation_threshold).any(0).squeeze()
         return mask
 
-    def _get_artifactual_channels(self):
+    def get_artifactual_channels(self):
         """Identify channels which display significant post-stim artifact. See
         :meth:`_get_saturated_channels` for return value info.
 
@@ -138,8 +138,8 @@ class ArtifactDetector(HasTraits):
         self._pre_sham_intervals = sham_intervals['pre']
         self._post_sham_intervals = sham_intervals['post']
 
-        saturated = self._get_saturated_channels()
-        artifactual = self._get_artifactual_channels()
+        saturated = self.get_saturated_channels()
+        artifactual = self.get_artifactual_channels()
         mask = np.logical_or(saturated, artifactual)
 
         rejected = [

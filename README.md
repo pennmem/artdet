@@ -37,3 +37,8 @@ Following all stim and sham events:
   
 By default, pre-stim interval is -440 to -40 ms relative to stim onset and
 post-stim interval is 40 to 440 ms.
+
+## Testing
+
+You will need access to rhino (for now) to test. Specify the rhino mount point
+with the environment variable `RHINO_ROOT` (default is `/`).
