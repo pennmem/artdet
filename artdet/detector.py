@@ -41,7 +41,7 @@ class ArtifactDetector(HasTraits):
         assert len(pre_intervals.shape) == 3
 
         assert sham_pre_intervals.shape == sham_post_intervals.shape
-        assert len(sham_pre_intervals) == 3
+        assert len(sham_pre_intervals.shape) == 3
         assert sham_pre_intervals.shape[2] == pre_intervals.shape[2]
 
         self.pre_intervals = pre_intervals
