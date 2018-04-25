@@ -34,10 +34,12 @@ def load_test_data():
         events = events_to_dataframe(event_log)
         stim_events = events[events['event_label'] == 'STIM'].dropna(axis=1)
 
+        # FIXME: make sham events during baseline encoding
+
         # skip the firststim stim events
         firststim = 15
 
-        # maximum channel index to read data from
+        # maximum channel index to read data from (-1 to load all)
         maxchan = 32
 
         # transposing data such that we are shaped with axes
