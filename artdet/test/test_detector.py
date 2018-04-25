@@ -2,10 +2,13 @@ import os
 
 import h5py
 import numpy as np
+from numpy.testing import assert_equal
 import pytest
 
 from cmlreaders.path_finder import PathFinder
 from cmlreaders.ramulator import events_to_dataframe
+
+from artdet.detector import ArtifactDetector
 
 
 def make_path_finder():
@@ -59,9 +62,21 @@ class TestArtifactDetector:
     @classmethod
     def setup_class(cls):
         data = load_test_data()
-
-        cls.pre = data['pre']
-        cls.post = data['post']
+        pre = data['pre']
+        post = data['post']
+        cls.detector = ArtifactDetector(pre, post)
 
     def test_get_saturated_channels(self):
-        pass
+        mask = self.detector.get_saturated_channels()
+
+        # FIXME: explicitly check that this gives the right results
+        assert not all(mask)
+
+    @pytest.mark.xfail
+    def test_get_artifactual_channels(self):
+        raise NotImplementedError
+
+    def test_get_bad_channels(self):
+        masks = self.detector.get_bad_channels()
+        assert len(masks) == 3
+        assert_equal(np.logical_or(masks[0], masks[1]), masks[2])

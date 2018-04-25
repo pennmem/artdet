@@ -5,6 +5,8 @@ dependencies:
   - attrs=17.4.0
   - ca-certificates=2018.03.07
   - certifi=2018.4.16
+  - h5py=2.7.1
+  - hdf5=1.10.1
   - intel-openmp=2018.0.0
   - libcxx=4.0.1
   - libcxxabi=4.0.1
@@ -18,7 +20,6 @@ dependencies:
   - ncurses=6.0
   - numpy=1.14.2
   - openssl=1.0.2o
-  - pandas=0.22.0
   - pip=9.0.3
   - pluggy=0.6.0
   - py=1.5.3
