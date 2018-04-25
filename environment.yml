@@ -1,0 +1,33 @@
+name: artdet
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2018.03.07
+  - certifi=2018.4.16
+  - intel-openmp=2018.0.0
+  - libcxx=4.0.1
+  - libcxxabi=4.0.1
+  - libedit=3.1
+  - libffi=3.2.1
+  - libgfortran=3.0.1
+  - mkl=2018.0.2
+  - mkl_fft=1.0.1
+  - mkl_random=1.0.1
+  - ncurses=6.0
+  - numpy=1.14.2
+  - openssl=1.0.2o
+  - pandas=0.22.0
+  - pip=9.0.3
+  - python=3.6.5
+  - python-dateutil=2.7.2
+  - pytz=2018.4
+  - readline=7.0
+  - setuptools=39.0.1
+  - six=1.11.0
+  - sqlite=3.23.1
+  - tk=8.6.7
+  - traits=4.6.0
+  - wheel=0.31.0
+  - xz=5.2.3
+  - zlib=1.2.11
+prefix: /Users/depalati/miniconda3/envs/artdet
