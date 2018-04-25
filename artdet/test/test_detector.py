@@ -72,9 +72,11 @@ class TestArtifactDetector:
         # FIXME: explicitly check that this gives the right results
         assert not all(mask)
 
-    @pytest.mark.xfail
     def test_get_artifactual_channels(self):
-        raise NotImplementedError
+        mask = self.detector.get_artifactual_channels()
+
+        # FIXME: explicitly check that this gives the right results
+        assert not all(mask)
 
     def test_get_bad_channels(self):
         masks = self.detector.get_bad_channels()

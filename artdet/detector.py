@@ -61,7 +61,7 @@ class ArtifactDetector(HasTraits):
 
     def get_artifactual_channels(self):
         """Identify channels which display significant post-stim artifact. See
-        :meth:`_get_saturated_channels` for return value info.
+        :meth:`get_saturated_channels` for return value info.
 
         Notes
         -----
@@ -69,11 +69,26 @@ class ArtifactDetector(HasTraits):
         this method.
 
         """
-        # TODO
-        return np.array([
-            random.choice([True, False])
-            for _ in range(self.post_intervals.shape[1])
-        ])
+        time_axis = 2
+        n_events = float(self.pre_intervals.shape[0])
+
+        # mean signals over time
+        m_pre_stim = self.pre_intervals.mean(axis=time_axis)
+        m_post_stim = self.post_intervals.mean(axis=time_axis)
+
+        # post - pre deltas
+        d_stim = m_post_stim - m_pre_stim
+        d_sham = d_stim + np.random.random(d_stim.shape)  # FIXME: load sham
+
+        # standard deviations over channels
+        s_sham = d_sham.std(axis=0)
+
+        # identify outlier events
+        outliers = d_stim >= 3 * s_sham
+
+        # mark channels with >= 30% outliers
+        mask = outliers.sum(axis=0).astype(np.float) / n_events >= 0.3
+        return mask
 
     def get_bad_channels(self):
         """Identify all bad channels.
