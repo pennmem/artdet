@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     get_path = partial(os.path.join, os.environ['RHINO_ROOT'], 'scratch', 'depalati')
     inpath = get_path('artdet.h5')
-    outpath = get_path('artdet_results.h5')
+    outpath = get_path('artdet_results2.h5')
 
     @contextmanager
     def open_hdf5_files():
@@ -68,8 +68,14 @@ if __name__ == "__main__":
         for i in range(count):
             print("analyzing dataset", i)
             data = infile['dataset_{}'.format(i)]
-            detector = ArtifactDetector(data['pre-stim'][:], data['post-stim'][:],
-                                        data['pre-sham'][:], data['post-sham'][:])
+
+            try:
+                detector = ArtifactDetector(data['pre-stim'][:], data['post-stim'][:],
+                                            data['pre-sham'][:], data['post-sham'][:])
+            except:
+                print("error, moving on")
+                continue
+
             saturated, artifactual, mask = detector.get_bad_channels()
 
             group = outfile.create_group('dataset_{}'.format(i))

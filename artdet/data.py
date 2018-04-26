@@ -106,8 +106,6 @@ if __name__ == "__main__":
     Dataset = namedtuple("Dataset", "subject,experiment,session")
 
     parser = ArgumentParser()
-    parser.add_argument("--url", "-u", default="http://rhino2.psych.upenn.edu:8083",
-                        help="root cmlweb url")
     parser.add_argument("outfile", type=str, help="path to output HDF5 file")
     args = parser.parse_args()
 
@@ -120,8 +118,9 @@ if __name__ == "__main__":
     ]
 
     for subject in subjects:
-        datasets.append(Dataset(subject, 'FR5', 0))
-        datasets.append(Dataset(subject, 'catFR5', 0))
+        for session in range(4):
+            datasets.append(Dataset(subject, 'FR5', session))
+            datasets.append(Dataset(subject, 'catFR5', session))
 
     with h5py.File(args.outfile, 'w') as hfile:
         count = 0
