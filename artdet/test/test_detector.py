@@ -42,3 +42,38 @@ class TestArtifactDetector:
         masks = self.detector.get_bad_channels()
         assert len(masks) == 3
         assert_equal(np.logical_or(masks[0], masks[1]), masks[2])
+
+
+if __name__ == "__main__":
+    from contextlib import contextmanager
+    from functools import partial
+    import os
+
+    import h5py
+
+    get_path = partial(os.path.join, os.environ['RHINO_ROOT'], 'scratch', 'depalati')
+    inpath = get_path('artdet.h5')
+    outpath = get_path('artdet_results.h5')
+
+    @contextmanager
+    def open_hdf5_files():
+        with h5py.File(inpath, 'r') as infile:
+            with h5py.File(outpath, 'w') as outfile:
+                yield infile, outfile
+
+    with open_hdf5_files() as files:
+        infile, outfile = files
+        count = infile.attrs['num_datasets']
+
+        for i in range(count):
+            print("analyzing dataset", i)
+            data = infile['dataset_{}'.format(i)]
+            detector = ArtifactDetector(data['pre-stim'][:], data['post-stim'][:],
+                                        data['pre-sham'][:], data['post-sham'][:])
+            saturated, artifactual, mask = detector.get_bad_channels()
+
+            group = outfile.create_group('dataset_{}'.format(i))
+            save = partial(group.create_dataset, chunks=True)
+            save('saturated', data=saturated)
+            save('artifactual', data=artifactual)
+            save('mask', data=mask)
