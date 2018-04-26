@@ -94,3 +94,57 @@ def load_data(subject, experiment, session, firststim=15, maxchan=-1):
         'pre-sham': presham,
         'post-sham': postsham,
     }
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    from collections import namedtuple
+    from ptsa.data.readers import JsonIndexReader
+
+    os.environ['RHINO_ROOT'] = "~/mnt/rhino"
+
+    Dataset = namedtuple("Dataset", "subject,experiment,session")
+
+    parser = ArgumentParser()
+    parser.add_argument("--url", "-u", default="http://rhino2.psych.upenn.edu:8083",
+                        help="root cmlweb url")
+    parser.add_argument("outfile", type=str, help="path to output HDF5 file")
+    args = parser.parse_args()
+
+    reader = JsonIndexReader('/Users/depalati/mnt/rhino/protocols/r1.json')
+    df = reader.as_dataframe().reset_index()
+    subjects = df[df.experiment.isin(['FR5', 'catFR5'])].subject.unique()
+
+    datasets = [
+        # Dataset('R1395M', "catFR5", 4),
+    ]
+
+    for subject in subjects:
+        datasets.append(Dataset(subject, 'FR5', 0))
+        datasets.append(Dataset(subject, 'catFR5', 0))
+
+    with h5py.File(args.outfile, 'w') as hfile:
+        count = 0
+
+        for dataset in datasets:
+            try:
+                data = load_data(*dataset)
+            except:
+                continue
+
+            group = hfile.create_group("dataset_{}".format(count))
+            group.attrs['subject'] = dataset.subject
+            group.attrs['experiment'] = dataset.experiment
+            group.attrs['session'] = dataset.session
+
+            for key, values in data.items():
+                group.create_dataset(key, data=values, compression='gzip',
+                                     compression_opts=9)
+                print("saving", dataset.subject, dataset.experiment, dataset.session, key)
+
+            hfile.flush()
+
+            if dataset != datasets[-1]:
+                count += 1
+
+        hfile.attrs['num_datasets'] = count
