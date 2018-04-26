@@ -1,8 +1,11 @@
 name: artdet
 channels:
+  - pennmem
   - defaults
 dependencies:
   - attrs=17.4.0
+  - blosc=1.14.3
+  - bzip2=1.0.6
   - ca-certificates=2018.03.07
   - certifi=2018.4.16
   - h5py=2.7.1
@@ -13,29 +16,40 @@ dependencies:
   - libedit=3.1
   - libffi=3.2.1
   - libgfortran=3.0.1
+  - lzo=2.10
   - mkl=2018.0.2
   - mkl_fft=1.0.1
   - mkl_random=1.0.1
   - more-itertools=4.1.0
   - ncurses=6.0
+  - numexpr=2.6.4
   - numpy=1.14.2
   - openssl=1.0.2o
+  - pandas=0.22.0
   - pip=9.0.3
   - pluggy=0.6.0
   - py=1.5.3
+  - pytables=3.4.3
   - pytest=3.5.0
   - python=3.6.5
   - python-dateutil=2.7.2
   - pytz=2018.4
+  - pywavelets=0.5.2
   - readline=7.0
+  - scipy=1.0.1
   - setuptools=39.0.1
   - six=1.11.0
+  - snappy=1.1.7
   - sqlite=3.23.1
   - tk=8.6.7
   - traits=4.6.0
   - wheel=0.31.0
+  - xarray=0.10.3
   - xz=5.2.3
   - zlib=1.2.11
+  - ptsa=1.1.5
   - pip:
     - cmlreaders==0.1.0
+    - pybind11==2.2.2
+    - tables==3.4.3
 prefix: /Users/depalati/miniconda3/envs/artdet
