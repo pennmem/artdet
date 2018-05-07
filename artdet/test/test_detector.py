@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     get_path = partial(os.path.join, os.environ['RHINO_ROOT'], 'scratch', 'depalati')
     inpath = get_path('artdet.h5')
-    outpath = get_path('artdet_results2.h5')
+    outpath = get_path('artdet_results3.h5')
 
     @contextmanager
     def open_hdf5_files():
@@ -71,7 +71,8 @@ if __name__ == "__main__":
 
             try:
                 detector = ArtifactDetector(data['pre-stim'][:], data['post-stim'][:],
-                                            data['pre-sham'][:], data['post-sham'][:])
+                                            data['pre-sham'][:], data['post-sham'][:],
+                                            artifactual_sd=2, artifactual_ratio=0.5)
             except:
                 print("error, moving on")
                 continue

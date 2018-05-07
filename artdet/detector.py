@@ -38,8 +38,8 @@ class ArtifactDetector(HasTraits):
 
     def __init__(self, pre_intervals, post_intervals, sham_pre_intervals,
                  sham_post_intervals, saturation_order=None,
-                 saturation_threshold=None, artifactual_sd=3,
-                 artifactual_ratio=0.5):
+                 saturation_threshold=None, artifactual_sd=None,
+                 artifactual_ratio=None):
         super(ArtifactDetector, self).__init__()
 
         assert pre_intervals.shape == post_intervals.shape
@@ -60,8 +60,11 @@ class ArtifactDetector(HasTraits):
         if saturation_threshold is not None:
             self.saturation_threshold = saturation_threshold
 
-        self.artifactual_sd = artifactual_sd
-        self.artifactual_ratio = artifactual_ratio
+        if artifactual_sd is not None:
+            self.artifactual_sd = artifactual_sd
+
+        if artifactual_ratio is not None:
+            self.artifactual_ratio = artifactual_ratio
 
     def get_saturated_channels(self):
         """Identify channels which display post-stim saturation.
