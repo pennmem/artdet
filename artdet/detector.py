@@ -3,7 +3,7 @@
 from collections import namedtuple
 
 import numpy as np
-from traits.api import HasTraits, Array, Int
+from traits.api import HasTraits, Array, Int, Float
 
 # Container for results from artifact detection
 ArtifactDetectionResults = namedtuple("ArtifactDetectionResults", "saturated,artifactual,mask")
@@ -32,9 +32,13 @@ class ArtifactDetector(HasTraits):
     saturation_order = Int(10, desc='derivative order')
     saturation_threshold = Int(10, desc='number of points where order derivative is equal to zero')
 
+    artifactual_sd = Int(3, desc='number of standard deviations from  mean to consider event artifactual')
+    artifactual_ratio = Float(0.5, desc="fraction of events required to be over threshold to throw away the channel")
+
     def __init__(self, pre_intervals, post_intervals, sham_pre_intervals,
                  sham_post_intervals, saturation_order=None,
-                 saturation_threshold=None):
+                 saturation_threshold=None, artifactual_sd=3,
+                 artifactual_ratio=0.5):
         super(ArtifactDetector, self).__init__()
 
         assert pre_intervals.shape == post_intervals.shape
@@ -54,6 +58,9 @@ class ArtifactDetector(HasTraits):
 
         if saturation_threshold is not None:
             self.saturation_threshold = saturation_threshold
+
+        self.artifactual_sd = artifactual_sd
+        self.artifactual_ratio = artifactual_ratio
 
     def get_saturated_channels(self):
         """Identify channels which display post-stim saturation.
@@ -99,10 +106,13 @@ class ArtifactDetector(HasTraits):
         s_sham = d_sham.std(axis=0)
 
         # identify outlier events
-        outliers = d_stim >= 3 * s_sham
+        outliers = d_stim >= self.artifactual_sd * s_sham
 
-        # mark channels with >= 30% outliers
-        mask = outliers.sum(axis=0).astype(np.float) / n_events >= 0.3
+        # mark channels with a proportion of events marked as artifactual over
+        # the given threshold
+        mask = (outliers.sum(axis=0).astype(np.float) /
+                n_events >= self.artifactual_ratio)
+
         return mask
 
     def get_bad_channels(self):
