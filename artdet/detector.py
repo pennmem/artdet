@@ -6,7 +6,8 @@ import numpy as np
 from traits.api import HasTraits, Array, Int, Float
 
 # Container for results from artifact detection
-ArtifactDetectionResults = namedtuple("ArtifactDetectionResults", "saturated,artifactual,mask")
+ArtifactDetectionResults = namedtuple("ArtifactDetectionResults",
+                                      "saturated,artifactual,mask")
 
 
 class ArtifactDetector(HasTraits):
@@ -32,8 +33,8 @@ class ArtifactDetector(HasTraits):
     saturation_order = Int(10, desc='derivative order')
     saturation_threshold = Int(10, desc='number of points where order derivative is equal to zero')
 
-    artifactual_sd = Int(3, desc='number of standard deviations from  mean to consider event artifactual')
-    artifactual_ratio = Float(0.5, desc="fraction of events required to be over threshold to throw away the channel")
+    artifactual_sd = Int(3, desc='standard deviations from mean to consider event artifactual')
+    artifactual_ratio = Float(0.5, desc='fraction of events required to be over threshold to flag a channel as bad')
 
     def __init__(self, pre_intervals, post_intervals, sham_pre_intervals,
                  sham_post_intervals, saturation_order=None,
