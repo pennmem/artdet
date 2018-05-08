@@ -106,11 +106,13 @@ class ArtifactDetector(HasTraits):
         d_stim = m_post_stim - m_pre_stim
         d_sham = m_post_sham - m_pre_sham
 
-        # standard deviation by channel (over events)
-        s_sham = d_sham.std(axis=self.event_axis)
+        # mean and standard deviation of the sham data by channel (over events)
+        sd_sham = d_sham.std(axis=self.event_axis)
+        mu_sham = d_sham.mean(axis=self.event_axis)
 
-        # identify outlier events
-        outliers = np.abs(d_stim) >= self.artifactual_sd * s_sham
+        # identify outlier events using the mean and sd of the sham post-pre
+        # difference as the normalization factor
+        outliers = np.abs((d_stim - mu_sham) / sd_sham) >= self.artifactual_sd
 
         # mark channels with a proportion of events marked as artifactual over
         # the given threshold
