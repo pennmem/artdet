@@ -1,0 +1,43 @@
+package:
+  name: artdet
+  version: 1.0.0
+source:
+  git_url: ../
+
+build:
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  number: 0
+
+  # Specify additional env vars pass through
+  # script_env:
+  #   - ENV_VAR_HERE
+
+requirements:
+  build:
+    - python {{ python }}
+    - cmlreaders
+    - h5py
+    - numpy
+    - traits
+
+  run:
+    - python {{ python }}
+    - cmlreaders
+    - h5py
+    - numpy
+    - traits
+    # - vs2015_runtime  [win]
+
+test:
+  # Test that we can import the package
+  imports:
+    - artdet
+    - artdet.data
+    - artdet.detector
+
+about:
+  home: https://github.com/pennmem/artdet
+  summary: EEG bad channel identification
+  # license: FIXME
+  # license_file: FIXME
