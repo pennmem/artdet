@@ -31,8 +31,8 @@ Following all stim and sham events:
 
 * Compute average signal for each pre- and post-stim interval
 * Compute post-pre difference `d_stim` (`d_sham`) for stim (sham) intervals
-* Compute mean `mu_sham` and standard deviation `sd_sham` of `d_sham`
-* Identify stim events where `abs(d_stim - mu_sham / sd_sham) > artifactual_sd`
+* Compute mean `m_sham` and standard deviation `s_sham` of `d_sham`
+* Identify stim events where `abs(d_stim - m_sham / s_sham) > artifactual_sd`
 * If more than `100 * artifactual_ratio`% of events above are found, identify
   the channel as exhibiting excessive artifact
   
