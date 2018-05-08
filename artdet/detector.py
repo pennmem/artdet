@@ -66,6 +66,10 @@ class ArtifactDetector(HasTraits):
         if artifactual_ratio is not None:
             self.artifactual_ratio = artifactual_ratio
 
+        self.event_axis = 0
+        self.channel_axis = 1
+        self.time_axis = 2
+
     def get_saturated_channels(self):
         """Identify channels which display post-stim saturation.
 
@@ -76,11 +80,12 @@ class ArtifactDetector(HasTraits):
             saturation.
 
         """
-        time_axis = 2
         deriv = np.diff(self.post_intervals,
                         n=self.saturation_order,
-                        axis=time_axis)
-        mask = ((deriv == 0).sum(time_axis) > self.saturation_threshold).any(0).squeeze()
+                        axis=self.time_axis)
+        mask = (((deriv == 0).sum(self.time_axis) >
+                 self.saturation_threshold).any(0).squeeze())
+
         return mask
 
     def get_artifactual_channels(self):
@@ -93,28 +98,29 @@ class ArtifactDetector(HasTraits):
         this method.
 
         """
-        time_axis = 2
-        n_events = float(self.pre_intervals.shape[0])
+        n_events = float(self.pre_intervals.shape[self.event_axis])
 
         # mean signals over time
-        m_pre_stim = self.pre_intervals.mean(axis=time_axis)
-        m_post_stim = self.post_intervals.mean(axis=time_axis)
-        m_pre_sham = self.sham_pre_intervals.mean(axis=time_axis)
-        m_post_sham = self.sham_post_intervals.mean(axis=time_axis)
+        m_pre_stim = self.pre_intervals.mean(axis=self.time_axis)
+        m_post_stim = self.post_intervals.mean(axis=self.time_axis)
+        m_pre_sham = self.sham_pre_intervals.mean(axis=self.time_axis)
+        m_post_sham = self.sham_post_intervals.mean(axis=self.time_axis)
 
         # post - pre deltas
         d_stim = m_post_stim - m_pre_stim
         d_sham = m_post_sham - m_pre_sham
 
-        # standard deviations over channels
-        s_sham = d_sham.std(axis=0)
+        # mean and standard deviation of the sham data by channel (over events)
+        sd_sham = d_sham.std(axis=self.event_axis)
+        mu_sham = d_sham.mean(axis=self.event_axis)
 
-        # identify outlier events
-        outliers = d_stim >= self.artifactual_sd * s_sham
+        # identify outlier events using the mean and sd of the sham post-pre
+        # difference as the normalization factor
+        outliers = np.abs((d_stim - mu_sham) / sd_sham) >= self.artifactual_sd
 
         # mark channels with a proportion of events marked as artifactual over
         # the given threshold
-        mask = (outliers.sum(axis=0).astype(np.float) /
+        mask = (outliers.sum(axis=self.event_axis).astype(np.float) /
                 n_events >= self.artifactual_ratio)
 
         return mask
@@ -136,3 +142,15 @@ class ArtifactDetector(HasTraits):
         artifactual = self.get_artifactual_channels()
         mask = np.logical_or(saturated, artifactual)
         return ArtifactDetectionResults(saturated, artifactual, mask)
+
+
+if __name__ == "__main__":
+    sample_pre_stim = np.random.normal(0, 3, (100, 50, 30))
+    sample_post_stim = np.random.normal(0, 4, (100, 50, 30))
+    sample_pre_sham = np.random.normal(0, 3, (100, 50, 30))
+    sample_post_sham = np.random.normal(0, 3, (100, 50, 30))
+
+    detector = ArtifactDetector(sample_pre_stim, sample_post_stim,
+                                sample_pre_sham, sample_post_sham)
+    artifactual_channels = detector.get_artifactual_channels()
+    saturated_channels = detector.get_saturated_channels()
