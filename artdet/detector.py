@@ -76,7 +76,9 @@ class ArtifactDetector(HasTraits):
         deriv = np.diff(self.post_intervals,
                         n=self.saturation_order,
                         axis=time_axis)
-        mask = ((deriv == 0).sum(time_axis) > self.saturation_threshold).any(0).squeeze()
+        mask = (((deriv == 0).sum(time_axis) >
+                 self.saturation_threshold).any(0).squeeze())
+
         return mask
 
     def get_artifactual_channels(self):
@@ -89,8 +91,11 @@ class ArtifactDetector(HasTraits):
         this method.
 
         """
+        event_axis = 0
+        channel_axis = 1
         time_axis = 2
-        n_events = float(self.pre_intervals.shape[0])
+
+        n_events = float(self.pre_intervals.shape[event_axis])
 
         # mean signals over time
         m_pre_stim = self.pre_intervals.mean(axis=time_axis)
@@ -106,7 +111,7 @@ class ArtifactDetector(HasTraits):
         s_sham = d_sham.std(axis=0)
 
         # identify outlier events
-        outliers = d_stim >= self.artifactual_sd * s_sham
+        outliers = np.abs(d_stim) >= self.artifactual_sd * s_sham
 
         # mark channels with a proportion of events marked as artifactual over
         # the given threshold
@@ -132,3 +137,15 @@ class ArtifactDetector(HasTraits):
         artifactual = self.get_artifactual_channels()
         mask = np.logical_or(saturated, artifactual)
         return ArtifactDetectionResults(saturated, artifactual, mask)
+
+
+if __name__ == "__main__":
+    sample_pre_stim = np.random.normal(0, 3, (100, 50, 30))
+    sample_post_stim = np.random.normal(0, 4, (100, 50, 30))
+    sample_pre_sham = np.random.normal(0, 3, (100, 50, 30))
+    sample_post_sham = np.random.normal(0, 3, (100, 50, 30))
+
+    detector = ArtifactDetector(sample_pre_stim, sample_post_stim,
+                                sample_pre_sham, sample_post_sham)
+    artifactual_channels = detector.get_artifactual_channels()
+    saturated_channels = detector.get_saturated_channels()
