@@ -88,14 +88,25 @@ class ArtifactDetector(HasTraits):
 
         return mask
 
-    def get_artifactual_channels(self):
-        """Identify channels which display significant post-stim artifact. See
-        :meth:`get_saturated_channels` for return value info.
+    def get_artifactual_channels(self, method='zscore'):
+        """Identify channels which display significant post-stim artifact.
 
-        Notes
-        -----
-        Stimulation channels are not treated any differently by
-        this method.
+        Parameters
+        ----------
+        method : str
+            One of: ``zscore``, ``tstat`` (default: ``zscore``)
+
+        """
+        if method == 'zscore':
+            return self.get_artifactual_channels_by_zscore()
+        elif method == 'tstat':
+            return self.get_artifactual_channels_by_tstat()
+        else:
+            raise RuntimeError("Invalid bad channel detection method")
+
+    def get_artifactual_channels_by_zscore(self):
+        """Identify channels which display significant post-stim artifact using
+        a zscore-based method.
 
         """
         n_events = float(self.pre_intervals.shape[self.event_axis])
@@ -124,6 +135,13 @@ class ArtifactDetector(HasTraits):
                 n_events >= self.artifactual_ratio)
 
         return mask
+
+    def get_artifactual_channels_by_tstat(self):
+        """Identify channels which display significant post-stim artifact using
+        a t-stat-based method.
+
+        """
+        raise NotImplementedError
 
     def get_bad_channels(self):
         """Identify all bad channels.
