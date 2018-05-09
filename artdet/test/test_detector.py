@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.testing import assert_equal
+import pytest
 
 from artdet.data import load_data
 from artdet.detector import ArtifactDetector
@@ -42,6 +43,10 @@ class TestArtifactDetector:
         masks = self.detector.get_bad_channels()
         assert len(masks) == 3
         assert_equal(np.logical_or(masks[0], masks[1]), masks[2])
+
+    @pytest.mark.only
+    def test_ttest_method(self):
+        mask = self.detector.get_artifactual_channels_by_tstat()
 
 
 if __name__ == "__main__":
