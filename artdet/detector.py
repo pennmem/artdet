@@ -182,17 +182,17 @@ class ArtifactDetector(HasTraits):
         m_post -= m_post_sham
 
         # t-test
-        # using transpose because I have events x channels x time, Ethan has
-        # channels x time x events
-        t, p = ttest_rel(m_post.T, m_pre.T, nan_policy='omit')
+        # FIXME: do I need to transpose here?
+        t, p = ttest_rel(m_post, m_pre)
 
         # Levene test for equal variances
-        # FIXME
-        # lt, lp = levene(m_post.T, m_pre.T)
+        lout = np.array([levene(m_post[:, chan], m_pre[:, chan])
+                         for chan in range(m_post.shape[1])])
+        lp = lout[:, 1]
 
         ttest_mask = p < 0.01
-        # levene_mask = lp < 0.01
-        levene_mask = np.zeros(ttest_mask.shape, dtype=bool)
+        levene_mask = lp < 0.01
+        # levene_mask = np.zeros(ttest_mask.shape, dtype=bool)
         print(ttest_mask)
         print(levene_mask)
         mask = ttest_mask | levene_mask
