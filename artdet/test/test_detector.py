@@ -44,9 +44,21 @@ class TestArtifactDetector:
         assert len(masks) == 3
         assert_equal(np.logical_or(masks[0], masks[1]), masks[2])
 
-    @pytest.mark.only
     def test_ttest_method(self):
-        mask = self.detector.get_artifactual_channels_by_tstat()
+        self.detector.get_artifactual_channels_by_tstat()
+
+    @pytest.mark.parametrize('method', ['zscore', 'tstat', 'notreal'])
+    def test_get_bad_channels(self, method):
+        if method == 'notreal':
+            with pytest.raises(RuntimeError):
+                self.detector.get_bad_channels(method=method)
+            return
+
+        sat, art, mask = self.detector.get_bad_channels(method=method)
+        assert isinstance(mask, np.ndarray)
+        assert isinstance(art, np.ndarray)
+        assert isinstance(sat, np.ndarray)
+        assert mask.shape == art.shape == sat.shape
 
 
 if __name__ == "__main__":

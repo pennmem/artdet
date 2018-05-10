@@ -198,8 +198,13 @@ class ArtifactDetector(HasTraits):
         mask = ttest_mask | levene_mask
         return mask
 
-    def get_bad_channels(self):
+    def get_bad_channels(self, method='zscore'):
         """Identify all bad channels.
+
+        Parameters
+        ----------
+        method : str
+            Either ``zscore`` or ``tstat``.
 
         Returns
         -------
@@ -212,7 +217,7 @@ class ArtifactDetector(HasTraits):
 
         """
         saturated = self.get_saturated_channels()
-        artifactual = self.get_artifactual_channels()
+        artifactual = self.get_artifactual_channels(method=method)
         mask = np.logical_or(saturated, artifactual)
         return ArtifactDetectionResults(saturated, artifactual, mask)
 
