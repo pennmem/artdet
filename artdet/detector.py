@@ -192,9 +192,6 @@ class ArtifactDetector(HasTraits):
 
         ttest_mask = p < 0.01
         levene_mask = lp < 0.01
-        # levene_mask = np.zeros(ttest_mask.shape, dtype=bool)
-        print(ttest_mask)
-        print(levene_mask)
         mask = ttest_mask | levene_mask
         return mask
 
