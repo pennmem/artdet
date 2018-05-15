@@ -169,7 +169,7 @@ class ArtifactDetector(HasTraits):
         a t-stat-based method.
 
         """
-        from scipy.stats import levene, ttest_rel
+        from scipy.stats import ttest_rel
 
         # compute means
         m_pre = self.pre_intervals.mean(axis=self.time_axis)
@@ -185,14 +185,7 @@ class ArtifactDetector(HasTraits):
         # FIXME: do I need to transpose here?
         t, p = ttest_rel(m_post, m_pre)
 
-        # Levene test for equal variances
-        lout = np.array([levene(m_post[:, chan], m_pre[:, chan])
-                         for chan in range(m_post.shape[1])])
-        lp = lout[:, 1]
-
-        ttest_mask = p < 0.01
-        levene_mask = lp < 0.01
-        mask = ttest_mask | levene_mask
+        mask = p < 0.01
         return mask
 
     def get_bad_channels(self, method='zscore'):
