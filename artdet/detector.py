@@ -183,8 +183,7 @@ class ArtifactDetector(HasTraits):
         m_post -= m_post_sham
 
         # t-test
-        # FIXME: do I need to transpose here?
-        t, p = ttest_rel(m_post, m_pre)
+        t, p = ttest_rel(m_post, m_pre, axis=0)
 
         mask = p < 0.01
         return mask
