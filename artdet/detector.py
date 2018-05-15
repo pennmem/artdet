@@ -94,13 +94,13 @@ class ArtifactDetector(HasTraits):
         Parameters
         ----------
         method : str
-            One of: ``zscore``, ``tstat`` (default: ``zscore``)
+            One of: ``zscore``, ``ttest`` (default: ``zscore``)
 
         """
         if method == 'zscore':
             return self.get_artifactual_channels_by_zscore()
-        elif method == 'tstat':
-            return self.get_artifactual_channels_by_tstat()
+        elif method == 'ttest':
+            return self.get_artifactual_channels_by_ttest()
         else:
             raise RuntimeError("Invalid bad channel detection method")
 
@@ -137,7 +137,8 @@ class ArtifactDetector(HasTraits):
         return mask
 
     def _channel_exclusion(self, eegs, samplerate=1000.):
-        """Ethan's original channel exclusion code.
+        """Ethan's original channel exclusion code. Leaving in place for
+        reference.
 
         Input array is channels x time x events.
 
@@ -164,9 +165,9 @@ class ArtifactDetector(HasTraits):
 
         return np.array(pvals), np.array(lev_pvals)
 
-    def get_artifactual_channels_by_tstat(self):
+    def get_artifactual_channels_by_ttest(self):
         """Identify channels which display significant post-stim artifact using
-        a t-stat-based method.
+        a t-test-based method.
 
         """
         from scipy.stats import ttest_rel
@@ -194,7 +195,7 @@ class ArtifactDetector(HasTraits):
         Parameters
         ----------
         method : str
-            Either ``zscore`` or ``tstat``.
+            Either ``zscore`` or ``ttest``.
 
         Returns
         -------

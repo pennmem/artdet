@@ -45,10 +45,10 @@ class TestArtifactDetector:
         assert_equal(np.logical_or(masks[0], masks[1]), masks[2])
 
     def test_ttest_method(self):
-        self.detector.get_artifactual_channels_by_tstat()
+        self.detector.get_artifactual_channels_by_ttest()
 
-    @pytest.mark.parametrize('method', ['zscore', 'tstat', 'notreal'])
-    def test_get_bad_channels(self, method):
+    @pytest.mark.parametrize('method', ['zscore', 'ttest', 'notreal'])
+    def test_get_bad_channels2(self, method):
         if method == 'notreal':
             with pytest.raises(RuntimeError):
                 self.detector.get_bad_channels(method=method)
