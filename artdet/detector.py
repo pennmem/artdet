@@ -88,14 +88,25 @@ class ArtifactDetector(HasTraits):
 
         return mask
 
-    def get_artifactual_channels(self):
-        """Identify channels which display significant post-stim artifact. See
-        :meth:`get_saturated_channels` for return value info.
+    def get_artifactual_channels(self, method='zscore'):
+        """Identify channels which display significant post-stim artifact.
 
-        Notes
-        -----
-        Stimulation channels are not treated any differently by
-        this method.
+        Parameters
+        ----------
+        method : str
+            One of: ``zscore``, ``ttest`` (default: ``zscore``)
+
+        """
+        if method == 'zscore':
+            return self.get_artifactual_channels_by_zscore()
+        elif method == 'ttest':
+            return self.get_artifactual_channels_by_ttest()
+        else:
+            raise RuntimeError("Invalid bad channel detection method")
+
+    def get_artifactual_channels_by_zscore(self):
+        """Identify channels which display significant post-stim artifact using
+        a zscore-based method.
 
         """
         n_events = float(self.pre_intervals.shape[self.event_axis])
@@ -125,8 +136,58 @@ class ArtifactDetector(HasTraits):
 
         return mask
 
-    def get_bad_channels(self):
+    def _channel_exclusion(self, eegs, samplerate=1000.):
+        """Ethan's original channel exclusion code. Leaving in place for
+        reference.
+
+        Input array is channels x time x events.
+
+        """
+        from scipy.stats import levene, ttest_rel
+
+        sr = int(samplerate)
+
+        pvals = []
+        lev_pvals = []
+
+        for i in range(eegs.shape[0]):
+            ts = eegs[i, :, :]
+            pre_eeg = np.mean(ts[:, int(sr*0.6):int(sr*0.95)], 1)
+            post_eeg = np.mean(ts[:, int(sr*1.55):int(sr*1.9)], 1)
+            eeg_t_chan, eeg_p_chan = ttest_rel(post_eeg, pre_eeg, nan_policy='omit')
+
+            pvals.append(eeg_p_chan)
+            try:
+                lev_t, lev_p = levene(post_eeg, pre_eeg)
+                lev_pvals.append(lev_p)
+            except:
+                lev_pvals.append(0.0)
+
+        return np.array(pvals), np.array(lev_pvals)
+
+    def get_artifactual_channels_by_ttest(self):
+        """Identify channels which display significant post-stim artifact using
+        a t-test-based method.
+
+        """
+        from scipy.stats import ttest_rel
+
+        # compute means
+        m_pre = self.pre_intervals.mean(axis=self.time_axis)
+        m_post = self.post_intervals.mean(axis=self.time_axis)
+
+        t, p = ttest_rel(m_post, m_pre, axis=0)
+
+        mask = p < 0.01
+        return mask
+
+    def get_bad_channels(self, method='zscore'):
         """Identify all bad channels.
+
+        Parameters
+        ----------
+        method : str
+            Either ``zscore`` or ``ttest``.
 
         Returns
         -------
@@ -139,7 +200,7 @@ class ArtifactDetector(HasTraits):
 
         """
         saturated = self.get_saturated_channels()
-        artifactual = self.get_artifactual_channels()
+        artifactual = self.get_artifactual_channels(method=method)
         mask = np.logical_or(saturated, artifactual)
         return ArtifactDetectionResults(saturated, artifactual, mask)
 

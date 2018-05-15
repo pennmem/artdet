@@ -1,5 +1,6 @@
 import numpy as np
 from numpy.testing import assert_equal
+import pytest
 
 from artdet.data import load_data
 from artdet.detector import ArtifactDetector
@@ -42,6 +43,22 @@ class TestArtifactDetector:
         masks = self.detector.get_bad_channels()
         assert len(masks) == 3
         assert_equal(np.logical_or(masks[0], masks[1]), masks[2])
+
+    def test_ttest_method(self):
+        self.detector.get_artifactual_channels_by_ttest()
+
+    @pytest.mark.parametrize('method', ['zscore', 'ttest', 'notreal'])
+    def test_get_bad_channels2(self, method):
+        if method == 'notreal':
+            with pytest.raises(RuntimeError):
+                self.detector.get_bad_channels(method=method)
+            return
+
+        sat, art, mask = self.detector.get_bad_channels(method=method)
+        assert isinstance(mask, np.ndarray)
+        assert isinstance(art, np.ndarray)
+        assert isinstance(sat, np.ndarray)
+        assert mask.shape == art.shape == sat.shape
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ requirements:
     - cmlreaders
     - h5py
     - numpy
+    - pandas
     - traits
     # - vs2015_runtime  [win]
 
