@@ -175,14 +175,7 @@ class ArtifactDetector(HasTraits):
         # compute means
         m_pre = self.pre_intervals.mean(axis=self.time_axis)
         m_post = self.post_intervals.mean(axis=self.time_axis)
-        m_pre_sham = self.sham_pre_intervals.mean(axis=self.time_axis)
-        m_post_sham = self.sham_post_intervals.mean(axis=self.time_axis)
 
-        # correct by subtracting "baselines" (sham in this case)
-        m_pre -= m_pre_sham
-        m_post -= m_post_sham
-
-        # t-test
         t, p = ttest_rel(m_post, m_pre, axis=0)
 
         mask = p < 0.01
