@@ -1,6 +1,6 @@
 package:
   name: artdet
-  version: 1.0.0
+  version: 1.1.0
 source:
   git_url: ../
 
@@ -19,6 +19,7 @@ requirements:
     - cmlreaders
     - h5py
     - numpy
+    - scipy
     - traits
 
   run:
@@ -27,6 +28,7 @@ requirements:
     - h5py
     - numpy
     - pandas
+    - scipy
     - traits
     # - vs2015_runtime  [win]
 
