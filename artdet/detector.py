@@ -24,6 +24,10 @@ class ArtifactDetector(HasTraits):
     sham_post_intervals : np.ndarray
         Sham post-stim intervals
 
+    Notes
+    -----
+    Parameters for the various detection methods must be set as attributes.
+
     """
     pre_intervals = Array(desc='pre-stim interval array')
     post_intervals = Array(desc='post-stim interval array')
@@ -31,15 +35,19 @@ class ArtifactDetector(HasTraits):
     sham_post_intervals = Array(desc='sham post-stim interval array')
 
     saturation_order = Int(10, desc='derivative order')
-    saturation_threshold = Int(10, desc='number of points where order derivative is equal to zero')
+    saturation_threshold = Int(10, desc=('number of points where order '
+                                         'derivative is equal to zero'))
 
-    artifactual_sd = Int(3, desc='standard deviations from mean to consider event artifactual')
-    artifactual_ratio = Float(0.5, desc='fraction of events required to be over threshold to flag a channel as bad')
+    zscore_sd = Int(3, desc=('standard deviations from mean to consider event '
+                             'artifactual when using the z-scoring method'))
+    zscore_threshold = Float(0.5, desc=('fraction of events required to be over'
+                                        ' threshold to flag a channel as bad'
+                                        ' when using the z-scoring method'))
+    ttest_threhold = Float(0.1, desc=('p-value threshold when using the t-test '
+                                      'method'))
 
     def __init__(self, pre_intervals, post_intervals, sham_pre_intervals,
-                 sham_post_intervals, saturation_order=None,
-                 saturation_threshold=None, artifactual_sd=None,
-                 artifactual_ratio=None):
+                 sham_post_intervals):
         super(ArtifactDetector, self).__init__()
 
         assert pre_intervals.shape == post_intervals.shape
@@ -53,18 +61,6 @@ class ArtifactDetector(HasTraits):
         self.post_intervals = post_intervals
         self.sham_pre_intervals = sham_pre_intervals
         self.sham_post_intervals = sham_post_intervals
-
-        if saturation_order is not None:
-            self.saturation_order = saturation_order
-
-        if saturation_threshold is not None:
-            self.saturation_threshold = saturation_threshold
-
-        if artifactual_sd is not None:
-            self.artifactual_sd = artifactual_sd
-
-        if artifactual_ratio is not None:
-            self.artifactual_ratio = artifactual_ratio
 
         self.event_axis = 0
         self.channel_axis = 1
@@ -127,12 +123,12 @@ class ArtifactDetector(HasTraits):
 
         # identify outlier events using the mean and sd of the sham post-pre
         # difference as the normalization factor
-        outliers = np.abs((d_stim - m_sham) / s_sham) >= self.artifactual_sd
+        outliers = np.abs((d_stim - m_sham) / s_sham) >= self.zscore_sd
 
         # mark channels with a proportion of events marked as artifactual over
         # the given threshold
         mask = (outliers.sum(axis=self.event_axis).astype(np.float) /
-                n_events >= self.artifactual_ratio)
+                n_events >= self.zscore_threshold)
 
         return mask
 
@@ -178,7 +174,7 @@ class ArtifactDetector(HasTraits):
 
         t, p = ttest_rel(m_post, m_pre, axis=0)
 
-        mask = p < 0.01
+        mask = p < self.ttest_threhold
         return mask
 
     def get_bad_channels(self, method='zscore'):
@@ -203,15 +199,3 @@ class ArtifactDetector(HasTraits):
         artifactual = self.get_artifactual_channels(method=method)
         mask = np.logical_or(saturated, artifactual)
         return ArtifactDetectionResults(saturated, artifactual, mask)
-
-
-if __name__ == "__main__":
-    sample_pre_stim = np.random.normal(0, 3, (100, 50, 30))
-    sample_post_stim = np.random.normal(0, 4, (100, 50, 30))
-    sample_pre_sham = np.random.normal(0, 3, (100, 50, 30))
-    sample_post_sham = np.random.normal(0, 3, (100, 50, 30))
-
-    detector = ArtifactDetector(sample_pre_stim, sample_post_stim,
-                                sample_pre_sham, sample_post_sham)
-    artifactual_channels = detector.get_artifactual_channels()
-    saturated_channels = detector.get_saturated_channels()
