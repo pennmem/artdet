@@ -43,7 +43,7 @@ class ArtifactDetector(HasTraits):
     zscore_threshold = Float(0.5, desc=('fraction of events required to be over'
                                         ' threshold to flag a channel as bad'
                                         ' when using the z-scoring method'))
-    ttest_threhold = Float(0.1, desc=('p-value threshold when using the t-test '
+    ttest_threhold = Float(0.01, desc=('p-value threshold when using the t-test '
                                       'method'))
 
     def __init__(self, pre_intervals, post_intervals, sham_pre_intervals,
