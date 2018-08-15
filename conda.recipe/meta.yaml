@@ -35,7 +35,7 @@ test:
   # Test that we can import the package
   imports:
     - artdet
-    - artdet.data
+    # - artdet.data
     - artdet.detector
 
 about:
