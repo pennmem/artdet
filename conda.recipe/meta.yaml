@@ -24,7 +24,6 @@ requirements:
 
   run:
     - python {{ python }}
-    - cmlreaders
     - h5py
     - numpy
     - pandas
